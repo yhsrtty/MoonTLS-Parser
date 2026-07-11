@@ -1,0 +1,8 @@
+target/
+.mooncakes/
+_build/
+.moon/
+*.wasm
+*.js
+*.wat
+*.log
