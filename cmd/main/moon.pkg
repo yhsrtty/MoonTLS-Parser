@@ -1,0 +1,7 @@
+import {
+  "yhsrtty/moontls-parser" @tls,
+}
+
+options(
+  "is-main": true,
+)

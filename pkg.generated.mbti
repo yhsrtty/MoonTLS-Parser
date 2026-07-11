@@ -1,0 +1,59 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "yhsrtty/moontls-parser"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn normalize_u16_list(ArrayView[UInt16]) -> String
+
+pub fn parse_client_hello(BytesView) -> Result[ClientHello, ParseError]
+
+pub fn uint16_to_hex4(UInt16) -> String
+
+// Errors
+
+// Types and methods
+pub struct ClientHello {
+  legacy_version : UInt16
+  record_version : UInt16
+  cipher_suites : Array[UInt16]
+  compression_methods : Array[Byte]
+  extensions : Array[UInt16]
+  supported_groups : Array[UInt16]
+  ec_point_formats : Array[Byte]
+  signature_algorithms : Array[UInt16]
+  alpn_protocols : Array[String]
+  server_name : String?
+  raw_length : Int
+} derive(@debug.Debug)
+pub fn ClientHello::ja3_digest(Self) -> String
+pub fn ClientHello::ja3_string(Self) -> String
+pub fn ClientHello::ja4_a(Self) -> String
+
+pub struct ClientHelloStream {
+  buffer : Array[Byte]
+} derive(@debug.Debug)
+pub fn ClientHelloStream::new() -> Self
+pub fn ClientHelloStream::push(Self, BytesView) -> StreamResult
+pub fn ClientHelloStream::reset(Self) -> Unit
+
+pub enum ParseError {
+  NotTlsHandshake
+  IncompleteRecord(expected~ : Int, available~ : Int)
+  BadHandshakeType(Int)
+  BadLength(field~ : String, offset~ : Int)
+  UnsupportedRecordVersion(UInt16)
+} derive(Eq, @debug.Debug)
+
+pub enum StreamResult {
+  NeedMore
+  Parsed(ClientHello)
+  Rejected(ParseError)
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+
