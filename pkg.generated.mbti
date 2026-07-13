@@ -8,7 +8,15 @@ import {
 // Values
 pub fn normalize_u16_list(ArrayView[UInt16]) -> String
 
+pub fn parse_alert(BytesView) -> Result[TlsAlert, ParseError]
+
+pub fn parse_certificate(BytesView) -> Result[TlsCertificate, ParseError]
+
 pub fn parse_client_hello(BytesView) -> Result[ClientHello, ParseError]
+
+pub fn parse_server_hello(BytesView) -> Result[ServerHello, ParseError]
+
+pub fn parse_tls_record(BytesView) -> Result[TlsRecord, ParseError]
 
 pub fn uint16_to_hex4(UInt16) -> String
 
@@ -31,6 +39,7 @@ pub struct ClientHello {
 pub fn ClientHello::ja3_digest(Self) -> String
 pub fn ClientHello::ja3_string(Self) -> String
 pub fn ClientHello::ja4_a(Self) -> String
+pub fn ClientHello::to_json(Self) -> String
 
 pub struct ClientHelloStream {
   buffer : Array[Byte]
@@ -45,13 +54,56 @@ pub enum ParseError {
   BadHandshakeType(Int)
   BadLength(field~ : String, offset~ : Int)
   UnsupportedRecordVersion(UInt16)
+  InvalidAlertLength
 } derive(Eq, @debug.Debug)
+
+pub struct ServerHello {
+  version : UInt16
+  random : Bytes
+  session_id : Bytes
+  cipher_suite : UInt16
+  compression_method : Byte
+  extensions : Array[UInt16]
+  selected_alpn : String?
+  raw_length : Int
+} derive(@debug.Debug)
+pub fn ServerHello::ja4s_a(Self) -> String
+pub fn ServerHello::to_json(Self) -> String
 
 pub enum StreamResult {
   NeedMore
   Parsed(ClientHello)
   Rejected(ParseError)
 } derive(@debug.Debug)
+
+pub struct TlsAlert {
+  level : Byte
+  description : Byte
+} derive(Eq, @debug.Debug)
+pub fn TlsAlert::description_string(Self) -> String
+pub fn TlsAlert::level_string(Self) -> String
+pub fn TlsAlert::to_json(Self) -> String
+
+pub struct TlsCertificate {
+  cert_lengths : Array[Int]
+} derive(Eq, @debug.Debug)
+pub fn TlsCertificate::to_json(Self) -> String
+
+pub enum TlsRecord {
+  ClientHelloRecord(ClientHello)
+  ServerHelloRecord(ServerHello)
+  AlertRecord(TlsAlert)
+  CertificateRecord(TlsCertificate)
+  GenericRecord(TlsRecordType, Bytes)
+} derive(@debug.Debug)
+pub fn TlsRecord::to_json(Self) -> String
+
+pub enum TlsRecordType {
+  ChangeCipherSpec
+  Handshake
+  ApplicationData
+  Unknown(Byte)
+} derive(Eq, @debug.Debug)
 
 // Type aliases
 

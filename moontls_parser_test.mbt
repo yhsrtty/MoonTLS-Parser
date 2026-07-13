@@ -66,3 +66,72 @@ test "grease values are excluded from ja3" {
   let suites : Array[UInt16] = [0x0a0a, 0x1301, 0x2a2a, 0x1302]
   inspect(normalize_u16_list(suites), content="4865-4866")
 }
+
+///|
+fn sample_server_hello() -> Bytes {
+  Bytes::from_array([
+    0x16, 0x03, 0x03, 0x00, 0x3b, 0x02, 0x00, 0x00, 0x37, 0x03, 0x03, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0x00, 0x13, 0x01, 0x00, 0x00, 0x0f, 0x00, 0x2b, 0x00, 0x02, 0x03, 0x04,
+    0x00, 0x10, 0x00, 0x05, 0x00, 0x03, 0x02, 0x68, 0x32,
+  ])
+}
+
+///|
+fn sample_alert() -> Bytes {
+  Bytes::from_array([0x15, 0x03, 0x03, 0x00, 0x02, 0x02, 0x28])
+}
+
+///|
+fn sample_certificate() -> Bytes {
+  Bytes::from_array([
+    0x16, 0x03, 0x03, 0x00, 0x12, 0x0b, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x0b, 0x00,
+    0x00, 0x03, 0x01, 0x02, 0x03, 0x00, 0x00, 0x02, 0x04, 0x05,
+  ])
+}
+
+///|
+test "parse tls record ServerHello" {
+  let parsed = parse_tls_record(sample_server_hello())
+  guard parsed is Ok(ServerHelloRecord(sh)) else {
+    fail("expected ServerHelloRecord")
+  }
+  inspect(sh.version.to_int(), content="772")
+  inspect(sh.cipher_suite.to_int(), content="4865")
+  debug_inspect(sh.selected_alpn, content="Some(\"h2\")")
+  inspect(sh.ja4s_a(), content="s13a02")
+}
+
+///|
+test "parse tls record Alert" {
+  let parsed = parse_tls_record(sample_alert())
+  guard parsed is Ok(AlertRecord(alert)) else { fail("expected AlertRecord") }
+  inspect(alert.level_string(), content="fatal")
+  inspect(alert.description_string(), content="handshake_failure")
+}
+
+///|
+test "parse tls record Certificate" {
+  let parsed = parse_tls_record(sample_certificate())
+  guard parsed is Ok(CertificateRecord(cert)) else {
+    fail("expected CertificateRecord")
+  }
+  debug_inspect(cert.cert_lengths, content="[3, 2]")
+}
+
+///|
+test "to_json serialization" {
+  let sh_parsed = parse_server_hello(sample_server_hello())
+  guard sh_parsed is Ok(sh) else { fail("expected ServerHello") }
+  inspect(
+    sh.to_json(),
+    content="{\"version\":772,\"cipher_suite\":4865,\"compression_method\":0,\"extensions\":[43,16],\"selected_alpn\":\"h2\",\"ja4s_a\":\"s13a02\"}",
+  )
+
+  let alert_parsed = parse_alert(sample_alert())
+  guard alert_parsed is Ok(alert) else { fail("expected Alert") }
+  inspect(
+    alert.to_json(),
+    content="{\"level\":2,\"level_str\":\"fatal\",\"description\":40,\"description_str\":\"handshake_failure\"}",
+  )
+}
