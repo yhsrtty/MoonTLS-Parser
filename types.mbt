@@ -5,6 +5,15 @@ pub enum ParseError {
   BadHandshakeType(Int)
   BadLength(field~ : String, offset~ : Int)
   UnsupportedRecordVersion(UInt16)
+  InvalidAlertLength
+} derive(Debug, Eq)
+
+///|
+pub enum TlsRecordType {
+  ChangeCipherSpec
+  Handshake
+  ApplicationData
+  Unknown(Byte)
 } derive(Debug, Eq)
 
 ///|
@@ -20,6 +29,38 @@ pub struct ClientHello {
   alpn_protocols : Array[String]
   server_name : String?
   raw_length : Int
+} derive(Debug)
+
+///|
+pub struct ServerHello {
+  version : UInt16
+  random : Bytes
+  session_id : Bytes
+  cipher_suite : UInt16
+  compression_method : Byte
+  extensions : Array[UInt16]
+  selected_alpn : String?
+  raw_length : Int
+} derive(Debug)
+
+///|
+pub struct TlsAlert {
+  level : Byte
+  description : Byte
+} derive(Debug, Eq)
+
+///|
+pub struct TlsCertificate {
+  cert_lengths : Array[Int]
+} derive(Debug, Eq)
+
+///|
+pub enum TlsRecord {
+  ClientHelloRecord(ClientHello)
+  ServerHelloRecord(ServerHello)
+  AlertRecord(TlsAlert)
+  CertificateRecord(TlsCertificate)
+  GenericRecord(TlsRecordType, Bytes)
 } derive(Debug)
 
 ///|

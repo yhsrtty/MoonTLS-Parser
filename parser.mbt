@@ -160,3 +160,90 @@ pub fn ClientHelloStream::push(
     }
   }
 }
+
+///|
+pub fn parse_tls_record(data : BytesView) -> Result[TlsRecord, ParseError] {
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
+  }
+  let ct = data[0].to_int()
+  guard read_u16(data, 1) is Some(_) else {
+    return Err(BadLength(field="record.version", offset=1))
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  let record_end = 5 + record_len
+  if data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
+  }
+
+  let body = data[0:record_end]
+  match ct {
+    0x14 =>
+      Ok(
+        GenericRecord(
+          ChangeCipherSpec,
+          Bytes::from_array(self_bytes(data, 5, record_len)),
+        ),
+      )
+    0x15 =>
+      match parse_alert(body) {
+        Ok(alert) => Ok(AlertRecord(alert))
+        Err(e) => Err(e)
+      }
+    0x16 => {
+      if record_len < 1 {
+        return Err(BadLength(field="handshake.type", offset=5))
+      }
+      let handshake_type = data[5].to_int()
+      match handshake_type {
+        1 =>
+          match parse_client_hello(body) {
+            Ok(hello) => Ok(ClientHelloRecord(hello))
+            Err(e) => Err(e)
+          }
+        2 =>
+          match parse_server_hello(body) {
+            Ok(hello) => Ok(ServerHelloRecord(hello))
+            Err(e) => Err(e)
+          }
+        11 =>
+          match parse_certificate(body) {
+            Ok(cert) => Ok(CertificateRecord(cert))
+            Err(e) => Err(e)
+          }
+        _ =>
+          Ok(
+            GenericRecord(
+              Handshake,
+              Bytes::from_array(self_bytes(data, 5, record_len)),
+            ),
+          )
+      }
+    }
+    0x17 =>
+      Ok(
+        GenericRecord(
+          ApplicationData,
+          Bytes::from_array(self_bytes(data, 5, record_len)),
+        ),
+      )
+    _ =>
+      Ok(
+        GenericRecord(
+          Unknown(data[0]),
+          Bytes::from_array(self_bytes(data, 5, record_len)),
+        ),
+      )
+  }
+}
+
+///|
+fn self_bytes(data : BytesView, offset : Int, len : Int) -> Array[Byte] {
+  let out = Array::new(capacity=len)
+  for i in 0..<len {
+    out.push(data[offset + i])
+  }
+  out
+}
