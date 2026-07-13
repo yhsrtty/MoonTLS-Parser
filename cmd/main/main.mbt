@@ -1,4 +1,6 @@
 ///|
+
+///|
 fn demo_client_hello() -> Bytes {
   Bytes::from_array([
     0x16, 0x03, 0x01, 0x00, 0x79, 0x01, 0x00, 0x00, 0x75, 0x03, 0x03, 0x00, 0x01,
@@ -15,17 +17,71 @@ fn demo_client_hello() -> Bytes {
 }
 
 ///|
+fn demo_server_hello() -> Bytes {
+  Bytes::from_array([
+    0x16, 0x03, 0x03, 0x00, 0x3b, 0x02, 0x00, 0x00, 0x37, 0x03, 0x03, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0x00, 0x13, 0x01, 0x00, 0x00, 0x0f, 0x00, 0x2b, 0x00, 0x02, 0x03, 0x04,
+    0x00, 0x10, 0x00, 0x05, 0x00, 0x03, 0x02, 0x68, 0x32,
+  ])
+}
+
+///|
+fn demo_alert() -> Bytes {
+  Bytes::from_array([0x15, 0x03, 0x03, 0x00, 0x02, 0x02, 0x28])
+}
+
+///|
 fn main {
-  match @tls.parse_client_hello(demo_client_hello()) {
-    Ok(hello) => {
+  println("=== Parsing ClientHello ===")
+  match @tls.parse_tls_record(demo_client_hello()) {
+    Ok(ClientHelloRecord(hello)) => {
+      println("Parsed ClientHello:")
       let sni = hello.server_name.unwrap_or("-")
       let alpn = hello.alpn_protocols.join("|")
-      println("sni=\{sni}")
-      println("alpn=\{alpn}")
-      println("ja3=\{hello.ja3_string()}")
-      println("ja3_digest=\{hello.ja3_digest()}")
-      println("ja4_a=\{hello.ja4_a()}")
+      let ja3 = hello.ja3_string()
+      let ja3_d = hello.ja3_digest()
+      let ja4 = hello.ja4_a()
+      let js = hello.to_json()
+      println("  sni=\{sni}")
+      println("  alpn=\{alpn}")
+      println("  ja3_string=\{ja3}")
+      println("  ja3_digest=\{ja3_d}")
+      println("  ja4_a=\{ja4}")
+      println("  json=\{js}")
     }
-    Err(err) => println("error=\{to_repr(err)}")
+    _ => println("failed to parse ClientHello")
+  }
+
+  println("\n=== Parsing ServerHello ===")
+  match @tls.parse_tls_record(demo_server_hello()) {
+    Ok(ServerHelloRecord(hello)) => {
+      println("Parsed ServerHello:")
+      let ver = hello.version.to_int().to_string(radix=16)
+      let cipher = hello.cipher_suite.to_int().to_string(radix=16)
+      let selected_alpn = hello.selected_alpn.unwrap_or("-")
+      let ja4s = hello.ja4s_a()
+      let js = hello.to_json()
+      println("  version=\{ver}")
+      println("  cipher_suite=\{cipher}")
+      println("  selected_alpn=\{selected_alpn}")
+      println("  ja4s_a=\{ja4s}")
+      println("  json=\{js}")
+    }
+    _ => println("failed to parse ServerHello")
+  }
+
+  println("\n=== Parsing Alert ===")
+  match @tls.parse_tls_record(demo_alert()) {
+    Ok(AlertRecord(alert)) => {
+      println("Parsed Alert:")
+      let level = alert.level_string()
+      let desc = alert.description_string()
+      let js = alert.to_json()
+      println("  level=\{level}")
+      println("  description=\{desc}")
+      println("  json=\{js}")
+    }
+    _ => println("failed to parse Alert")
   }
 }
