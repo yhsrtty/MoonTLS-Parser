@@ -34,7 +34,7 @@ Write-Host "Generating public API summary..."
 moon info
 
 Write-Host "Running demo..."
-moon run --target js cmd/main
+moon run --target native cmd/main
 
 $trackedMoon = @(git ls-files "*.mbt" "*.mbti")
 $lineCount = 0
