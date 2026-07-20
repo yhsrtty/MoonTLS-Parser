@@ -12,8 +12,11 @@ pub fn parse_server_hello(data : BytesView) -> Result[ServerHello, ParseError] {
   guard read_u16_int(data, 3) is Some(record_len) else {
     return Err(BadLength(field="record.length", offset=3))
   }
+  if record_len < 0 {
+    return Err(BadLength(field="record.length", offset=3))
+  }
   let record_end = 5 + record_len
-  if data.length() < record_end {
+  if record_end < 5 || data.length() < record_end {
     return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 2 {
@@ -24,7 +27,7 @@ pub fn parse_server_hello(data : BytesView) -> Result[ServerHello, ParseError] {
   }
   let body_offset = 9
   let body_end = body_offset + handshake_len
-  if body_end > record_end {
+  if handshake_len < 0 || body_end < body_offset || body_end > record_end {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
 
@@ -50,7 +53,7 @@ pub fn parse_server_hello(data : BytesView) -> Result[ServerHello, ParseError] {
     return Err(BadLength(field="session_id.length", offset=cursor))
   }
 
-  if cursor + 1 + session_len > body_end {
+  if session_len < 0 || cursor + 1 + session_len > body_end {
     return Err(BadLength(field="session_id.body", offset=cursor))
   }
   let session_arr = Array::new(capacity=session_len)
@@ -81,7 +84,7 @@ pub fn parse_server_hello(data : BytesView) -> Result[ServerHello, ParseError] {
       return Err(BadLength(field="extensions.length", offset=cursor))
     }
     cursor = cursor + 2
-    if cursor + ext_total_len > body_end {
+    if ext_total_len < 0 || cursor + ext_total_len > body_end {
       return Err(BadLength(field="extensions.body", offset=cursor))
     }
     let ext_end = cursor + ext_total_len
@@ -93,7 +96,9 @@ pub fn parse_server_hello(data : BytesView) -> Result[ServerHello, ParseError] {
         return Err(BadLength(field="extension.length", offset=cursor + 2))
       }
       cursor = cursor + 4
-      if cursor + ext_len > ext_end {
+      if ext_len < 0 ||
+        cursor + ext_len > ext_end ||
+        !has_range(data, cursor, ext_len) {
         return Err(BadLength(field="extension.body", offset=cursor))
       }
       if !is_grease(ext_type) {

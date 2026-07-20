@@ -44,14 +44,16 @@ jobs:
           irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
           echo "$HOME/.moon/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
 
-      - name: Moon Check
+      - name: Install Moon Wrapper
         run: |
-          moon fmt --check
-          moon check --deny-warn
-          moon info
-          git diff --exit-code
-          git status
+          mkdir -p "$HOME/wrapper_bin"
+          cp .github/workflows/moon-wrapper.sh "$HOME/wrapper_bin/moon"
+          chmod +x "$HOME/wrapper_bin/moon"
+          echo "$HOME/wrapper_bin" >> "$GITHUB_PATH"
 
-      - name: Moon test
+      - name: Moon Code Checks & Formats
         run: |
+          moon check --deny-warn
+          moon fmt --deny-warn
+          moon info --deny-warn
           moon test --deny-warn

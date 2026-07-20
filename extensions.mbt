@@ -1,7 +1,7 @@
 ///|
 fn parse_sni(data : BytesView) -> String? {
   guard read_u16_int(data, 0) is Some(list_len) else { return None }
-  if list_len + 2 > data.length() {
+  if list_len < 0 || list_len + 2 > data.length() {
     return None
   }
   let mut offset = 2
@@ -9,7 +9,7 @@ fn parse_sni(data : BytesView) -> String? {
     let name_type = data[offset].to_int()
     guard read_u16_int(data, offset + 1) is Some(name_len) else { return None }
     offset = offset + 3
-    if offset + name_len > data.length() {
+    if name_len < 0 || offset + name_len > data.length() {
       return None
     }
     if name_type == 0 {
@@ -24,12 +24,15 @@ fn parse_sni(data : BytesView) -> String? {
 fn parse_alpn(data : BytesView) -> Array[String] {
   let out : Array[String] = []
   guard read_u16_int(data, 0) is Some(total_len) else { return out }
+  if total_len < 0 {
+    return out
+  }
   let mut offset = 2
   let end = Int::min(data.length(), 2 + total_len)
   while offset < end {
     let len = data[offset].to_int()
     offset = offset + 1
-    if offset + len > end {
+    if len < 0 || offset + len > end {
       return out
     }
     match bytes_to_ascii(data, offset, len) {
@@ -45,6 +48,9 @@ fn parse_alpn(data : BytesView) -> Array[String] {
 fn parse_u16_vector(data : BytesView) -> Array[UInt16] {
   let out : Array[UInt16] = []
   guard read_u16_int(data, 0) is Some(total_len) else { return out }
+  if total_len < 0 {
+    return out
+  }
   let mut offset = 2
   let end = Int::min(data.length(), 2 + total_len)
   while offset + 1 < end {
@@ -64,6 +70,9 @@ fn parse_byte_vector(data : BytesView) -> Array[Byte] {
     return out
   }
   let len = data[0].to_int()
+  if len < 0 {
+    return out
+  }
   let end = Int::min(data.length(), 1 + len)
   for i in 1..<end {
     out.push(data[i])

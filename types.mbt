@@ -55,11 +55,70 @@ pub struct TlsCertificate {
 } derive(Debug, Eq)
 
 ///|
+pub struct ClientKeyExchange {
+  raw : Bytes
+} derive(Debug, Eq)
+
+///|
+pub struct ServerKeyExchange {
+  raw : Bytes
+} derive(Debug, Eq)
+
+///|
+pub struct NewSessionTicket {
+  lifetime : UInt
+  age_add : UInt
+  ticket : Bytes
+} derive(Debug, Eq)
+
+///|
+pub struct EncryptedExtensions {
+  extensions : Array[UInt16]
+} derive(Debug, Eq)
+
+///|
+pub struct HelloRequest {
+  dummy : Byte
+} derive(Debug, Eq)
+
+///|
+pub struct HelloVerifyRequest {
+  version : UInt16
+  cookie : Bytes
+} derive(Debug, Eq)
+
+///|
+pub struct CertificateRequest {
+  certificate_types : Array[Byte]
+  supported_signature_algorithms : Array[UInt16]
+} derive(Debug, Eq)
+
+///|
+pub struct CertificateVerify {
+  signature_algorithm : UInt16
+  signature : Bytes
+} derive(Debug, Eq)
+
+///|
+pub struct Finished {
+  verify_data : Bytes
+} derive(Debug, Eq)
+
+///|
 pub enum TlsRecord {
   ClientHelloRecord(ClientHello)
   ServerHelloRecord(ServerHello)
   AlertRecord(TlsAlert)
   CertificateRecord(TlsCertificate)
+  ClientKeyExchangeRecord(ClientKeyExchange)
+  ServerKeyExchangeRecord(ServerKeyExchange)
+  NewSessionTicketRecord(NewSessionTicket)
+  EncryptedExtensionsRecord(EncryptedExtensions)
+  HelloRequestRecord(HelloRequest)
+  HelloVerifyRequestRecord(HelloVerifyRequest)
+  CertificateRequestRecord(CertificateRequest)
+  CertificateVerifyRecord(CertificateVerify)
+  FinishedRecord(Finished)
   GenericRecord(TlsRecordType, Bytes)
 } derive(Debug)
 

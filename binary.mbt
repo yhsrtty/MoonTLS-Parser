@@ -1,6 +1,9 @@
 ///|
 fn has_range(data : BytesView, offset : Int, len : Int) -> Bool {
-  offset >= 0 && len >= 0 && offset + len <= data.length()
+  offset >= 0 &&
+  len >= 0 &&
+  offset <= data.length() &&
+  len <= data.length() - offset
 }
 
 ///|

@@ -14,8 +14,11 @@ pub fn parse_certificate(
   guard read_u16_int(data, 3) is Some(record_len) else {
     return Err(BadLength(field="record.length", offset=3))
   }
+  if record_len < 0 {
+    return Err(BadLength(field="record.length", offset=3))
+  }
   let record_end = 5 + record_len
-  if data.length() < record_end {
+  if record_end < 5 || data.length() < record_end {
     return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 11 {
@@ -26,7 +29,7 @@ pub fn parse_certificate(
   }
   let body_offset = 9
   let body_end = body_offset + handshake_len
-  if body_end > record_end {
+  if handshake_len < 0 || body_end < body_offset || body_end > record_end {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
 
@@ -40,7 +43,7 @@ pub fn parse_certificate(
 
   let mut cursor = body_offset + 3
   let list_end = cursor + certs_list_len
-  if list_end > body_end {
+  if certs_list_len < 0 || list_end < cursor || list_end > body_end {
     return Err(BadLength(field="certificates.list_body", offset=cursor))
   }
 
@@ -51,7 +54,7 @@ pub fn parse_certificate(
       return Err(BadLength(field="certificate.length", offset=cursor))
     }
     cursor = cursor + 3
-    if cursor + cert_len > list_end {
+    if cert_len < 0 || cursor + cert_len > list_end {
       return Err(BadLength(field="certificate.body", offset=cursor))
     }
     cert_lengths.push(cert_len)

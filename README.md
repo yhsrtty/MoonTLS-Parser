@@ -24,15 +24,39 @@ This repository is an original MoonBit implementation. It references public TLS,
 
 ## Install
 
-After the package is published on Mooncakes:
+### Option 1: Via Mooncakes Package Manager (Recommended)
+
+Add `moontls-parser` directly to your MoonBit project using `moon add`:
 
 ```bash
 moon add yhsrtty/moontls-parser
 ```
 
-For local development:
+Or manually declare the dependency in your `moon.mod`:
+
+```text
+import {
+  "yhsrtty/moontls-parser@0.1.0",
+}
+```
+
+Or in JSON format (`moon.mod.json`):
+
+```json
+{
+  "deps": {
+    "yhsrtty/moontls-parser": "0.1.0"
+  }
+}
+```
+
+### Option 2: Local Development & Building from Source
+
+To build, test, and run locally:
 
 ```bash
+git clone https://github.com/yhsrtty/MoonTLS-Parser.git
+cd MoonTLS-Parser
 moon check --deny-warn
 moon test --deny-warn
 moon run cmd/main

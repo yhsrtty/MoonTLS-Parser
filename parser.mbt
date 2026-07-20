@@ -16,7 +16,9 @@ fn parse_extensions(
       return Err(BadLength(field="extension.length", offset=cursor + 2))
     }
     cursor = cursor + 4
-    if cursor + ext_len > end {
+    if ext_len < 0 ||
+      cursor + ext_len > end ||
+      !has_range(data, cursor, ext_len) {
       return Err(BadLength(field="extension.body", offset=cursor))
     }
     if !is_grease(ext_type) {
@@ -58,8 +60,11 @@ pub fn parse_client_hello(data : BytesView) -> Result[ClientHello, ParseError] {
   guard read_u16_int(data, 3) is Some(record_len) else {
     return Err(BadLength(field="record.length", offset=3))
   }
+  if record_len < 0 {
+    return Err(BadLength(field="record.length", offset=3))
+  }
   let record_end = 5 + record_len
-  if data.length() < record_end {
+  if record_end < 5 || data.length() < record_end {
     return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 1 {
@@ -70,7 +75,7 @@ pub fn parse_client_hello(data : BytesView) -> Result[ClientHello, ParseError] {
   }
   let body_offset = 9
   let body_end = body_offset + handshake_len
-  if body_end > record_end {
+  if handshake_len < 0 || body_end < body_offset || body_end > record_end {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
   guard require_range(data, body_offset, 34, "clienthello.fixed") is Ok(_) else {
@@ -83,12 +88,15 @@ pub fn parse_client_hello(data : BytesView) -> Result[ClientHello, ParseError] {
   guard read_u8(data, cursor) is Some(session_len) else {
     return Err(BadLength(field="session_id.length", offset=cursor))
   }
+  if cursor + 1 + session_len > body_end {
+    return Err(BadLength(field="session_id.body", offset=cursor))
+  }
   cursor = cursor + 1 + session_len
   guard read_u16_int(data, cursor) is Some(cipher_len) else {
     return Err(BadLength(field="cipher_suites.length", offset=cursor))
   }
   cursor = cursor + 2
-  if cursor + cipher_len > body_end || cipher_len % 2 != 0 {
+  if cipher_len < 0 || cursor + cipher_len > body_end || cipher_len % 2 != 0 {
     return Err(BadLength(field="cipher_suites.body", offset=cursor))
   }
   let cipher_suites : Array[UInt16] = []
@@ -105,7 +113,7 @@ pub fn parse_client_hello(data : BytesView) -> Result[ClientHello, ParseError] {
     return Err(BadLength(field="compression.length", offset=cursor))
   }
   cursor = cursor + 1
-  if cursor + compression_len > body_end {
+  if compression_len < 0 || cursor + compression_len > body_end {
     return Err(BadLength(field="compression.body", offset=cursor))
   }
   let compression_methods : Array[Byte] = []
@@ -133,7 +141,7 @@ pub fn parse_client_hello(data : BytesView) -> Result[ClientHello, ParseError] {
     return Err(BadLength(field="extensions.length", offset=cursor))
   }
   cursor = cursor + 2
-  if cursor + ext_total_len > body_end {
+  if ext_total_len < 0 || cursor + ext_total_len > body_end {
     return Err(BadLength(field="extensions.body", offset=cursor))
   }
   parse_extensions(data, cursor, ext_total_len, base)
@@ -173,8 +181,11 @@ pub fn parse_tls_record(data : BytesView) -> Result[TlsRecord, ParseError] {
   guard read_u16_int(data, 3) is Some(record_len) else {
     return Err(BadLength(field="record.length", offset=3))
   }
+  if record_len < 0 {
+    return Err(BadLength(field="record.length", offset=3))
+  }
   let record_end = 5 + record_len
-  if data.length() < record_end {
+  if record_end < 5 || data.length() < record_end {
     return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
 
@@ -213,6 +224,51 @@ pub fn parse_tls_record(data : BytesView) -> Result[TlsRecord, ParseError] {
             Ok(cert) => Ok(CertificateRecord(cert))
             Err(e) => Err(e)
           }
+        12 =>
+          match parse_server_key_exchange(body) {
+            Ok(ske) => Ok(ServerKeyExchangeRecord(ske))
+            Err(e) => Err(e)
+          }
+        16 =>
+          match parse_client_key_exchange(body) {
+            Ok(cke) => Ok(ClientKeyExchangeRecord(cke))
+            Err(e) => Err(e)
+          }
+        4 =>
+          match parse_new_session_ticket(body) {
+            Ok(nst) => Ok(NewSessionTicketRecord(nst))
+            Err(e) => Err(e)
+          }
+        8 =>
+          match parse_encrypted_extensions(body) {
+            Ok(ee) => Ok(EncryptedExtensionsRecord(ee))
+            Err(e) => Err(e)
+          }
+        0 =>
+          match parse_hello_request(body) {
+            Ok(hr) => Ok(HelloRequestRecord(hr))
+            Err(e) => Err(e)
+          }
+        3 =>
+          match parse_hello_verify_request(body) {
+            Ok(hvr) => Ok(HelloVerifyRequestRecord(hvr))
+            Err(e) => Err(e)
+          }
+        13 =>
+          match parse_certificate_request(body) {
+            Ok(cr) => Ok(CertificateRequestRecord(cr))
+            Err(e) => Err(e)
+          }
+        15 =>
+          match parse_certificate_verify(body) {
+            Ok(cv) => Ok(CertificateVerifyRecord(cv))
+            Err(e) => Err(e)
+          }
+        20 =>
+          match parse_finished(body) {
+            Ok(fn_) => Ok(FinishedRecord(fn_))
+            Err(e) => Err(e)
+          }
         _ =>
           Ok(
             GenericRecord(
@@ -241,6 +297,9 @@ pub fn parse_tls_record(data : BytesView) -> Result[TlsRecord, ParseError] {
 
 ///|
 fn self_bytes(data : BytesView, offset : Int, len : Int) -> Array[Byte] {
+  if !has_range(data, offset, len) {
+    return []
+  }
   let out = Array::new(capacity=len)
   for i in 0..<len {
     out.push(data[offset + i])

@@ -30,7 +30,7 @@ pub fn ClientHello::ja3_string(self : ClientHello) -> String {
 }
 
 ///|
-fn ascii_bytes(text : String) -> Bytes {
+pub fn ascii_bytes(text : String) -> Bytes {
   let out : Array[Byte] = []
   for unit in text.code_units() {
     out.push(unit.to_byte())

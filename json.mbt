@@ -161,6 +161,38 @@ pub fn TlsRecord::to_json(self : TlsRecord) -> String {
     ServerHelloRecord(sh) => sh.to_json()
     AlertRecord(al) => al.to_json()
     CertificateRecord(cert) => cert.to_json()
+    ClientKeyExchangeRecord(cke) =>
+      "{\"record_type\":\"client_key_exchange\",\"payload_len\":\{cke.raw.length()}}"
+    ServerKeyExchangeRecord(ske) =>
+      "{\"record_type\":\"server_key_exchange\",\"payload_len\":\{ske.raw.length()}}"
+    NewSessionTicketRecord(nst) => {
+      let lifetime = nst.lifetime.reinterpret_as_int()
+      let ticket_len = nst.ticket.length()
+      "{\"record_type\":\"new_session_ticket\",\"lifetime\":\{lifetime},\"ticket_len\":\{ticket_len}}"
+    }
+    EncryptedExtensionsRecord(ee) => {
+      let ext_arr = json_array_u16(ee.extensions)
+      "{\"record_type\":\"encrypted_extensions\",\"extensions\":\{ext_arr}}"
+    }
+    HelloRequestRecord(_) => "{\"record_type\":\"hello_request\"}"
+    HelloVerifyRequestRecord(hvr) => {
+      let ver = hvr.version.to_int()
+      let cookie_len = hvr.cookie.length()
+      "{\"record_type\":\"hello_verify_request\",\"version\":\{ver},\"cookie_len\":\{cookie_len}}"
+    }
+    CertificateRequestRecord(cr) => {
+      let types = cr.certificate_types.map(fn(b) { b.to_int() })
+      let types_arr = json_array_int(types)
+      let algs_arr = json_array_u16(cr.supported_signature_algorithms)
+      "{\"record_type\":\"certificate_request\",\"certificate_types\":\{types_arr},\"supported_signature_algorithms\":\{algs_arr}}"
+    }
+    CertificateVerifyRecord(cv) => {
+      let alg = cv.signature_algorithm.to_int()
+      let sig_len = cv.signature.length()
+      "{\"record_type\":\"certificate_verify\",\"signature_algorithm\":\{alg},\"signature_len\":\{sig_len}}"
+    }
+    FinishedRecord(fn_) =>
+      "{\"record_type\":\"finished\",\"verify_data_len\":\{fn_.verify_data.length()}}"
     GenericRecord(ty, payload) => {
       let ty_str = match ty {
         ChangeCipherSpec => "change_cipher_spec"
