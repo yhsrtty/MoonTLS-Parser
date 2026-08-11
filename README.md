@@ -36,7 +36,7 @@ Or manually declare the dependency in your `moon.mod`:
 
 ```text
 import {
-  "yhsrtty/moontls-parser@0.1.1",
+  "yhsrtty/moontls-parser@0.1.2",
 }
 ```
 
@@ -45,7 +45,7 @@ Or in JSON format (`moon.mod.json`):
 ```json
 {
   "deps": {
-    "yhsrtty/moontls-parser": "0.1.1"
+    "yhsrtty/moontls-parser": "0.1.2"
   }
 }
 ```
