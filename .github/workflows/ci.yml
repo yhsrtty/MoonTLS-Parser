@@ -53,7 +53,9 @@ jobs:
 
       - name: Moon Code Checks & Formats
         run: |
+          moon update
           moon check --deny-warn
           moon fmt --deny-warn
           moon info --deny-warn
           moon test --deny-warn
+

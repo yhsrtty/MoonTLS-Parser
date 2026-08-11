@@ -25,6 +25,7 @@ Require-File "docs/source-attribution.md"
 Require-File "docs/acceptance-checklist.md"
 
 Write-Host "Running moon check..."
+moon update
 moon check --warn-list +73
 
 Write-Host "Running moon test..."
@@ -59,3 +60,4 @@ if (-not $SkipMooncakes) {
 }
 
 Write-Host "Acceptance verification complete."
+
