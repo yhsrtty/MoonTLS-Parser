@@ -162,7 +162,9 @@ pub fn parse_certificate_request(
       cursor = cursor + 2
     }
     if cursor != end_sig {
-      return Err(BadLength(field="cert_request.sig_algs_trailing", offset=cursor))
+      return Err(
+        BadLength(field="cert_request.sig_algs_trailing", offset=cursor),
+      )
     }
   }
 

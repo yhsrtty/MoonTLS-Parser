@@ -27,7 +27,8 @@ test "security audit: truncated record headers return IncompleteRecord without p
   inspect(parse_tls_record(b4[:]) is Err(IncompleteRecord(_)), content="true")
 }
 
-///| Test that typed parsers reject records too short to contain a handshake header.
+///|
+/// Test that typed parsers reject records too short to contain a handshake header.
 test "security audit: typed parsers reject zero to three byte handshake records" {
   for record_len in 0..<4 {
     let arr : Array[Byte] = [

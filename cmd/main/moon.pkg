@@ -2,6 +2,5 @@ import {
   "yhsrtty/moontls-parser" @tls,
 }
 
-options(
-  "is-main": true,
-)
+pkgtype(kind: "executable")
+
