@@ -19,6 +19,9 @@ pub fn parse_server_hello(data : BytesView) -> Result[ServerHello, ParseError] {
   if record_end < 5 || data.length() < record_end {
     return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
   if data[5].to_int() != 2 {
     return Err(BadHandshakeType(data[5].to_int()))
   }
@@ -84,7 +87,7 @@ pub fn parse_server_hello(data : BytesView) -> Result[ServerHello, ParseError] {
       return Err(BadLength(field="extensions.length", offset=cursor))
     }
     cursor = cursor + 2
-    if ext_total_len < 0 || cursor + ext_total_len > body_end {
+    if ext_total_len < 0 || cursor + ext_total_len != body_end {
       return Err(BadLength(field="extensions.body", offset=cursor))
     }
     let ext_end = cursor + ext_total_len
@@ -120,6 +123,9 @@ pub fn parse_server_hello(data : BytesView) -> Result[ServerHello, ParseError] {
         }
       }
       cursor = cursor + ext_len
+    }
+    if cursor != ext_end {
+      return Err(BadLength(field="extensions.trailing", offset=cursor))
     }
   }
 

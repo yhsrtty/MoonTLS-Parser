@@ -21,6 +21,9 @@ pub fn parse_certificate(
   if record_end < 5 || data.length() < record_end {
     return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
   if data[5].to_int() != 11 {
     return Err(BadHandshakeType(data[5].to_int()))
   }
@@ -46,6 +49,9 @@ pub fn parse_certificate(
   if certs_list_len < 0 || list_end < cursor || list_end > body_end {
     return Err(BadLength(field="certificates.list_body", offset=cursor))
   }
+  if list_end != body_end {
+    return Err(BadLength(field="certificates.trailing", offset=list_end))
+  }
 
   let cert_lengths : Array[Int] = []
 
@@ -59,6 +65,10 @@ pub fn parse_certificate(
     }
     cert_lengths.push(cert_len)
     cursor = cursor + cert_len
+  }
+
+  if cursor != list_end {
+    return Err(BadLength(field="certificates.trailing", offset=cursor))
   }
 
   Ok({ cert_lengths, })

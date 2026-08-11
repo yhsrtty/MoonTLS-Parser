@@ -6,11 +6,21 @@
 pub fn parse_hello_request(
   data : BytesView,
 ) -> Result[HelloRequest, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 0 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -18,7 +28,8 @@ pub fn parse_hello_request(
   guard read_u24_int(data, 6) is Some(handshake_len) else {
     return Err(BadLength(field="handshake.length", offset=6))
   }
-  if handshake_len != 0 {
+  let body_end = 9 + handshake_len
+  if handshake_len != 0 || body_end > record_end {
     return Err(BadLength(field="hello_request.body", offset=9))
   }
   Ok({ dummy: 0 })
@@ -28,11 +39,21 @@ pub fn parse_hello_request(
 pub fn parse_hello_verify_request(
   data : BytesView,
 ) -> Result[HelloVerifyRequest, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 3 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -41,7 +62,7 @@ pub fn parse_hello_verify_request(
     return Err(BadLength(field="handshake.length", offset=6))
   }
   let body_offset = 9
-  if handshake_len < 0 || body_offset + handshake_len > data.length() {
+  if handshake_len < 0 || body_offset + handshake_len > record_end {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
 
@@ -74,11 +95,21 @@ pub fn parse_hello_verify_request(
 pub fn parse_certificate_request(
   data : BytesView,
 ) -> Result[CertificateRequest, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 13 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -88,7 +119,7 @@ pub fn parse_certificate_request(
   }
   let body_offset = 9
   let body_end = body_offset + handshake_len
-  if handshake_len < 0 || body_end < body_offset || body_end > data.length() {
+  if handshake_len < 0 || body_end < body_offset || body_end > record_end {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
 
@@ -130,6 +161,13 @@ pub fn parse_certificate_request(
       sig_algs.push(alg)
       cursor = cursor + 2
     }
+    if cursor != end_sig {
+      return Err(BadLength(field="cert_request.sig_algs_trailing", offset=cursor))
+    }
+  }
+
+  if cursor != body_end {
+    return Err(BadLength(field="cert_request.trailing", offset=cursor))
   }
 
   Ok({ certificate_types, supported_signature_algorithms: sig_algs })
@@ -139,11 +177,21 @@ pub fn parse_certificate_request(
 pub fn parse_certificate_verify(
   data : BytesView,
 ) -> Result[CertificateVerify, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 15 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -153,7 +201,7 @@ pub fn parse_certificate_verify(
   }
   let body_offset = 9
   let body_end = body_offset + handshake_len
-  if handshake_len < 0 || body_end < body_offset || body_end > data.length() {
+  if handshake_len < 0 || body_end < body_offset || body_end > record_end {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
 
@@ -187,11 +235,21 @@ pub fn parse_certificate_verify(
 
 ///|
 pub fn parse_finished(data : BytesView) -> Result[Finished, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 20 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -203,7 +261,7 @@ pub fn parse_finished(data : BytesView) -> Result[Finished, ParseError] {
   let body_end = body_offset + handshake_len
   if handshake_len < 0 ||
     body_end < body_offset ||
-    body_end > data.length() ||
+    body_end > record_end ||
     !has_range(data, body_offset, handshake_len) {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }

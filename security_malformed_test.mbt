@@ -27,6 +27,56 @@ test "security audit: truncated record headers return IncompleteRecord without p
   inspect(parse_tls_record(b4[:]) is Err(IncompleteRecord(_)), content="true")
 }
 
+///| Test that typed parsers reject records too short to contain a handshake header.
+test "security audit: typed parsers reject zero to three byte handshake records" {
+  for record_len in 0..<4 {
+    let arr : Array[Byte] = [
+      (0x16 : Byte),
+      (0x03 : Byte),
+      (0x03 : Byte),
+      (0x00 : Byte),
+      record_len.to_byte(),
+    ]
+    for _i in 0..<record_len {
+      arr.push((0x00 : Byte))
+    }
+    let raw = Bytes::from_array(arr)
+    inspect(parse_client_hello(raw[:]) is Err(BadLength(_)), content="true")
+    inspect(parse_server_hello(raw[:]) is Err(BadLength(_)), content="true")
+    inspect(parse_certificate(raw[:]) is Err(BadLength(_)), content="true")
+    inspect(
+      parse_client_key_exchange(raw[:]) is Err(BadLength(_)),
+      content="true",
+    )
+    inspect(
+      parse_server_key_exchange(raw[:]) is Err(BadLength(_)),
+      content="true",
+    )
+    inspect(
+      parse_new_session_ticket(raw[:]) is Err(BadLength(_)),
+      content="true",
+    )
+    inspect(
+      parse_encrypted_extensions(raw[:]) is Err(BadLength(_)),
+      content="true",
+    )
+    inspect(parse_hello_request(raw[:]) is Err(BadLength(_)), content="true")
+    inspect(
+      parse_hello_verify_request(raw[:]) is Err(BadLength(_)),
+      content="true",
+    )
+    inspect(
+      parse_certificate_request(raw[:]) is Err(BadLength(_)),
+      content="true",
+    )
+    inspect(
+      parse_certificate_verify(raw[:]) is Err(BadLength(_)),
+      content="true",
+    )
+    inspect(parse_finished(raw[:]) is Err(BadLength(_)), content="true")
+  }
+}
+
 ///|
 /// Test unknown / unhandled TLS record content types
 test "security audit: unknown content types parsed safely as GenericRecord" {

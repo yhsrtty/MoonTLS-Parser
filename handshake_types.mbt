@@ -6,11 +6,21 @@
 pub fn parse_client_key_exchange(
   data : BytesView,
 ) -> Result[ClientKeyExchange, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 16 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -22,7 +32,7 @@ pub fn parse_client_key_exchange(
   let body_end = body_offset + handshake_len
   if handshake_len < 0 ||
     body_end < body_offset ||
-    body_end > data.length() ||
+    body_end > record_end ||
     !has_range(data, body_offset, handshake_len) {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
@@ -39,11 +49,21 @@ pub fn parse_client_key_exchange(
 pub fn parse_server_key_exchange(
   data : BytesView,
 ) -> Result[ServerKeyExchange, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 12 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -55,7 +75,7 @@ pub fn parse_server_key_exchange(
   let body_end = body_offset + handshake_len
   if handshake_len < 0 ||
     body_end < body_offset ||
-    body_end > data.length() ||
+    body_end > record_end ||
     !has_range(data, body_offset, handshake_len) {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
@@ -72,11 +92,21 @@ pub fn parse_server_key_exchange(
 pub fn parse_new_session_ticket(
   data : BytesView,
 ) -> Result[NewSessionTicket, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 4 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -86,7 +116,7 @@ pub fn parse_new_session_ticket(
   }
   let body_offset = 9
   let body_end = body_offset + handshake_len
-  if handshake_len < 0 || body_end < body_offset || body_end > data.length() {
+  if handshake_len < 0 || body_end < body_offset || body_end > record_end {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
 
@@ -129,11 +159,21 @@ pub fn parse_new_session_ticket(
 pub fn parse_encrypted_extensions(
   data : BytesView,
 ) -> Result[EncryptedExtensions, ParseError] {
-  if data.length() < 9 {
-    return Err(IncompleteRecord(expected=9, available=data.length()))
+  if data.length() < 5 {
+    return Err(IncompleteRecord(expected=5, available=data.length()))
   }
   if data[0].to_int() != 0x16 {
     return Err(NotTlsHandshake)
+  }
+  guard read_u16_int(data, 3) is Some(record_len) else {
+    return Err(BadLength(field="record.length", offset=3))
+  }
+  if record_len < 4 {
+    return Err(BadLength(field="handshake.header", offset=5))
+  }
+  let record_end = 5 + record_len
+  if record_end < 5 || data.length() < record_end {
+    return Err(IncompleteRecord(expected=record_end, available=data.length()))
   }
   if data[5].to_int() != 8 {
     return Err(BadHandshakeType(data[5].to_int()))
@@ -143,7 +183,7 @@ pub fn parse_encrypted_extensions(
   }
   let body_offset = 9
   let body_end = body_offset + handshake_len
-  if handshake_len < 0 || body_end < body_offset || body_end > data.length() {
+  if handshake_len < 0 || body_end < body_offset || body_end > record_end {
     return Err(BadLength(field="handshake.body", offset=body_offset))
   }
 
@@ -184,6 +224,10 @@ pub fn parse_encrypted_extensions(
       extensions.push(ext_type)
     }
     cursor = cursor + ext_len
+  }
+
+  if cursor != ext_end {
+    return Err(BadLength(field="extensions.trailing", offset=cursor))
   }
 
   Ok({ extensions, })
