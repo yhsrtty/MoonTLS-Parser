@@ -56,6 +56,9 @@ jobs:
           moon update
           moon check --deny-warn
           moon fmt --deny-warn
-          moon info --deny-warn
+          git diff --exit-code
+          moon info
+          git diff --exit-code -- '*.mbti'
+          moon build
           moon test --deny-warn
-
+          moon run cmd/main

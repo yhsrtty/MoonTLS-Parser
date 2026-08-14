@@ -6,23 +6,254 @@ import {
 }
 
 // Values
+pub const CONTENT_TYPE_ALERT : Byte = 0x15
+
+pub const CONTENT_TYPE_APPLICATION_DATA : Byte = 0x17
+
+pub const CONTENT_TYPE_CHANGE_CIPHER_SPEC : Byte = 0x14
+
+pub const CONTENT_TYPE_HANDSHAKE : Byte = 0x16
+
+pub const GROUP_FFDHE2048 : UInt16 = 0x0100
+
+pub const GROUP_FFDHE3072 : UInt16 = 0x0101
+
+pub const GROUP_FFDHE4096 : UInt16 = 0x0102
+
+pub const GROUP_SECP256R1 : UInt16 = 0x0017
+
+pub const GROUP_SECP384R1 : UInt16 = 0x0018
+
+pub const GROUP_SECP521R1 : UInt16 = 0x0019
+
+pub const GROUP_X25519 : UInt16 = 0x001d
+
+pub const GROUP_X448 : UInt16 = 0x001e
+
+pub const HANDSHAKE_TYPE_CERTIFICATE : Byte = 11
+
+pub const HANDSHAKE_TYPE_CERTIFICATE_REQUEST : Byte = 13
+
+pub const HANDSHAKE_TYPE_CERTIFICATE_VERIFY : Byte = 15
+
+pub const HANDSHAKE_TYPE_CLIENT_HELLO : Byte = 1
+
+pub const HANDSHAKE_TYPE_CLIENT_KEY_EXCHANGE : Byte = 16
+
+pub const HANDSHAKE_TYPE_ENCRYPTED_EXTENSIONS : Byte = 8
+
+pub const HANDSHAKE_TYPE_END_OF_EARLY_DATA : Byte = 5
+
+pub const HANDSHAKE_TYPE_FINISHED : Byte = 20
+
+pub const HANDSHAKE_TYPE_HELLO_REQUEST : Byte = 0
+
+pub const HANDSHAKE_TYPE_HELLO_VERIFY_REQUEST : Byte = 3
+
+pub const HANDSHAKE_TYPE_KEY_UPDATE : Byte = 24
+
+pub const HANDSHAKE_TYPE_MESSAGE_HASH : Byte = 254
+
+pub const HANDSHAKE_TYPE_NEW_SESSION_TICKET : Byte = 4
+
+pub const HANDSHAKE_TYPE_SERVER_HELLO : Byte = 2
+
+pub const HANDSHAKE_TYPE_SERVER_HELLO_DONE : Byte = 14
+
+pub const HANDSHAKE_TYPE_SERVER_KEY_EXCHANGE : Byte = 12
+
+pub const SIG_SCHEME_ECDSA_SHA256_NISTP256 : UInt16 = 0x0403
+
+pub const SIG_SCHEME_ECDSA_SHA384_NISTP384 : UInt16 = 0x0503
+
+pub const SIG_SCHEME_ECDSA_SHA512_NISTP521 : UInt16 = 0x0603
+
+pub const SIG_SCHEME_ED25519 : UInt16 = 0x0807
+
+pub const SIG_SCHEME_ED448 : UInt16 = 0x0808
+
+pub const SIG_SCHEME_RSA_PKCS1_SHA256 : UInt16 = 0x0401
+
+pub const SIG_SCHEME_RSA_PKCS1_SHA384 : UInt16 = 0x0501
+
+pub const SIG_SCHEME_RSA_PKCS1_SHA512 : UInt16 = 0x0601
+
+pub const SIG_SCHEME_RSA_PSS_RSAE_SHA256 : UInt16 = 0x0804
+
+pub const SIG_SCHEME_RSA_PSS_RSAE_SHA384 : UInt16 = 0x0805
+
+pub const SIG_SCHEME_RSA_PSS_RSAE_SHA512 : UInt16 = 0x0806
+
+pub const VERSION_SSL_3_0 : UInt16 = 0x0300
+
+pub const VERSION_TLS_1_0 : UInt16 = 0x0301
+
+pub const VERSION_TLS_1_1 : UInt16 = 0x0302
+
+pub const VERSION_TLS_1_2 : UInt16 = 0x0303
+
+pub const VERSION_TLS_1_3 : UInt16 = 0x0304
+
+pub fn add_custom_client_fingerprint(String, String, String) -> Unit
+
+pub fn add_custom_server_fingerprint(String, String, String) -> Unit
+
+pub fn alert_description_to_string(Byte) -> String
+
+pub fn alert_level_to_string(Byte) -> String
+
+pub fn ascii_bytes(String) -> Bytes
+
+pub fn audit_client_hello_security(ClientHello) -> Array[SecurityFinding]
+
+pub fn audit_server_hello_security(ServerHello) -> Array[SecurityFinding]
+
+pub fn cipher_details_db_size() -> Int
+
+pub fn cipher_suite_id_to_string(UInt16) -> String
+
+pub fn client_db_size() -> Int
+
+pub fn extension_id_to_string(UInt16) -> String
+
+pub fn fixture_client_hello_tls12() -> Bytes
+
+pub fn fixture_client_key_exchange() -> Bytes
+
+pub fn fixture_encrypted_extensions() -> Bytes
+
+pub fn fixture_new_session_ticket() -> Bytes
+
+pub fn fixture_server_hello_tls13() -> Bytes
+
+pub fn fixture_server_key_exchange() -> Bytes
+
+pub fn fixture_tls_alert_fatal() -> Bytes
+
+pub fn fixture_tls_certificate() -> Bytes
+
+pub fn format_markdown_report(Array[BenchmarkReport]) -> String
+
+pub fn generate_mermaid_diagram(Array[TlsRecord], Array[Bool]) -> String
+
+pub fn generate_sequence_diagram(Array[HandshakeEvent]) -> String
+
+pub fn hex_dump(BytesView) -> String
+
+pub fn is_aead_cipher_id(UInt16) -> Bool
+
+pub fn is_recommended_cipher_id(UInt16) -> Bool
+
+pub fn is_tls_13_cipher_id(UInt16) -> Bool
+
+pub fn is_tls_version_supported(UInt16) -> Bool
+
+pub fn is_weak_cipher_id(UInt16) -> Bool
+
+pub fn ja3_db_size() -> Int
+
+pub fn lookup_cipher_details(UInt16) -> CipherDetails?
+
+pub fn lookup_client_fingerprint(String) -> String?
+
+pub fn lookup_client_fingerprint_ext(String) -> String?
+
+pub fn lookup_fingerprint_info(String) -> String
+
+pub fn lookup_ja3_fingerprint(String) -> String?
+
+pub fn lookup_server_fingerprint(String) -> String?
+
+pub fn lookup_server_fingerprint_ext(String) -> String?
+
 pub fn normalize_u16_list(ArrayView[UInt16]) -> String
 
 pub fn parse_alert(BytesView) -> Result[TlsAlert, ParseError]
 
 pub fn parse_certificate(BytesView) -> Result[TlsCertificate, ParseError]
 
+pub fn parse_certificate_request(BytesView) -> Result[CertificateRequest, ParseError]
+
+pub fn parse_certificate_verify(BytesView) -> Result[CertificateVerify, ParseError]
+
 pub fn parse_client_hello(BytesView) -> Result[ClientHello, ParseError]
+
+pub fn parse_client_key_exchange(BytesView) -> Result[ClientKeyExchange, ParseError]
+
+pub fn parse_encrypted_extensions(BytesView) -> Result[EncryptedExtensions, ParseError]
+
+pub fn parse_finished(BytesView) -> Result[Finished, ParseError]
+
+pub fn parse_hello_request(BytesView) -> Result[HelloRequest, ParseError]
+
+pub fn parse_hello_verify_request(BytesView) -> Result[HelloVerifyRequest, ParseError]
+
+pub fn parse_key_share_client(BytesView) -> Result[KeyShareClient, ParseError]
+
+pub fn parse_key_share_server(BytesView) -> Result[KeyShareServer, ParseError]
+
+pub fn parse_new_session_ticket(BytesView) -> Result[NewSessionTicket, ParseError]
 
 pub fn parse_server_hello(BytesView) -> Result[ServerHello, ParseError]
 
+pub fn parse_server_key_exchange(BytesView) -> Result[ServerKeyExchange, ParseError]
+
+pub fn parse_server_name_list(BytesView) -> Result[ServerNameList, ParseError]
+
+pub fn parse_supported_versions_client(BytesView) -> Result[SupportedVersionsClient, ParseError]
+
+pub fn parse_tls_cookie(BytesView) -> Result[TlsCookie, ParseError]
+
 pub fn parse_tls_record(BytesView) -> Result[TlsRecord, ParseError]
 
+pub fn print_security_audit_report(Array[SecurityFinding]) -> Unit
+
+pub fn run_and_print_performance_audit() -> Unit
+
+pub fn run_detailed_benchmarks() -> Array[BenchmarkReport]
+
+pub fn run_parser_benchmark(Int) -> Unit
+
+pub fn server_db_size() -> Int
+
+pub fn sha256_hash(BytesView) -> Bytes
+
+pub fn sha256_hex(BytesView) -> String
+
 pub fn uint16_to_hex4(UInt16) -> String
+
+pub fn visualize_handshake(Array[TlsRecord], Array[Bool]) -> String
 
 // Errors
 
 // Types and methods
+pub struct BenchmarkReport {
+  test_name : String
+  operations : Int
+  total_bytes : Int
+  efficiency_rating : String
+} derive(Eq, @debug.Debug)
+
+pub struct CertificateRequest {
+  certificate_types : Array[Byte]
+  supported_signature_algorithms : Array[UInt16]
+} derive(Eq, @debug.Debug)
+
+pub struct CertificateVerify {
+  signature_algorithm : UInt16
+  signature : Bytes
+} derive(Eq, @debug.Debug)
+
+pub struct CipherDetails {
+  id : UInt16
+  name : String
+  kex : String
+  enc : String
+  mac : String
+  strength : Int
+  is_recommended : Bool
+} derive(Eq, @debug.Debug)
+
 pub struct ClientHello {
   legacy_version : UInt16
   record_version : UInt16
@@ -38,7 +269,11 @@ pub struct ClientHello {
 } derive(@debug.Debug)
 pub fn ClientHello::ja3_digest(Self) -> String
 pub fn ClientHello::ja3_string(Self) -> String
+pub fn ClientHello::ja4(Self) -> String
 pub fn ClientHello::ja4_a(Self) -> String
+pub fn ClientHello::ja4_a_str(Self) -> String
+pub fn ClientHello::ja4_b_str(Self) -> String
+pub fn ClientHello::ja4_c_str(Self) -> String
 pub fn ClientHello::to_json(Self) -> String
 
 pub struct ClientHelloStream {
@@ -48,6 +283,58 @@ pub fn ClientHelloStream::new() -> Self
 pub fn ClientHelloStream::push(Self, BytesView) -> StreamResult
 pub fn ClientHelloStream::reset(Self) -> Unit
 
+pub struct ClientKeyExchange {
+  raw : Bytes
+} derive(Eq, @debug.Debug)
+
+pub struct EncryptedExtensions {
+  extensions : Array[UInt16]
+} derive(Eq, @debug.Debug)
+
+pub struct FingerprintEntry {
+  fingerprint : String
+  client_type : String
+  description : String
+} derive(Eq, @debug.Debug)
+
+pub struct Finished {
+  verify_data : Bytes
+} derive(Eq, @debug.Debug)
+
+pub struct HandshakeEvent {
+  direction_is_client_to_server : Bool
+  label : String
+  details : Array[String]
+} derive(Eq, @debug.Debug)
+
+pub struct HelloRequest {
+  dummy : Byte
+} derive(Eq, @debug.Debug)
+
+pub struct HelloVerifyRequest {
+  version : UInt16
+  cookie : Bytes
+} derive(Eq, @debug.Debug)
+
+pub struct KeyShareClient {
+  client_shares : Array[KeyShareEntry]
+} derive(Eq, @debug.Debug)
+
+pub struct KeyShareEntry {
+  group : UInt16
+  key_exchange : Bytes
+} derive(Eq, @debug.Debug)
+
+pub struct KeyShareServer {
+  server_share : KeyShareEntry
+} derive(Eq, @debug.Debug)
+
+pub struct NewSessionTicket {
+  lifetime : UInt
+  age_add : UInt
+  ticket : Bytes
+} derive(Eq, @debug.Debug)
+
 pub enum ParseError {
   NotTlsHandshake
   IncompleteRecord(expected~ : Int, available~ : Int)
@@ -55,6 +342,13 @@ pub enum ParseError {
   BadLength(field~ : String, offset~ : Int)
   UnsupportedRecordVersion(UInt16)
   InvalidAlertLength
+} derive(Eq, @debug.Debug)
+
+pub struct SecurityFinding {
+  severity : String
+  category : String
+  finding : String
+  suggestion : String
 } derive(Eq, @debug.Debug)
 
 pub struct ServerHello {
@@ -67,14 +361,39 @@ pub struct ServerHello {
   selected_alpn : String?
   raw_length : Int
 } derive(@debug.Debug)
+pub fn ServerHello::ja4s(Self) -> String
 pub fn ServerHello::ja4s_a(Self) -> String
+pub fn ServerHello::ja4s_a_str(Self) -> String
+pub fn ServerHello::ja4s_b_str(Self) -> String
+pub fn ServerHello::ja4s_c_str(Self) -> String
 pub fn ServerHello::to_json(Self) -> String
+
+pub struct ServerKeyExchange {
+  raw : Bytes
+} derive(Eq, @debug.Debug)
+
+pub struct ServerNameEntry {
+  name_type : Byte
+  name : String
+} derive(Eq, @debug.Debug)
+
+pub struct ServerNameList {
+  names : Array[ServerNameEntry]
+} derive(Eq, @debug.Debug)
+
+type Sha256
+pub fn Sha256::finalize(Self) -> Bytes
+pub fn Sha256::update(Self, BytesView) -> Unit
 
 pub enum StreamResult {
   NeedMore
   Parsed(ClientHello)
   Rejected(ParseError)
 } derive(@debug.Debug)
+
+pub struct SupportedVersionsClient {
+  versions : Array[UInt16]
+} derive(Eq, @debug.Debug)
 
 pub struct TlsAlert {
   level : Byte
@@ -89,13 +408,30 @@ pub struct TlsCertificate {
 } derive(Eq, @debug.Debug)
 pub fn TlsCertificate::to_json(Self) -> String
 
+pub struct TlsCookie {
+  cookie : Bytes
+} derive(Eq, @debug.Debug)
+
 pub enum TlsRecord {
   ClientHelloRecord(ClientHello)
   ServerHelloRecord(ServerHello)
   AlertRecord(TlsAlert)
   CertificateRecord(TlsCertificate)
+  ClientKeyExchangeRecord(ClientKeyExchange)
+  ServerKeyExchangeRecord(ServerKeyExchange)
+  NewSessionTicketRecord(NewSessionTicket)
+  EncryptedExtensionsRecord(EncryptedExtensions)
+  HelloRequestRecord(HelloRequest)
+  HelloVerifyRequestRecord(HelloVerifyRequest)
+  CertificateRequestRecord(CertificateRequest)
+  CertificateVerifyRecord(CertificateVerify)
+  FinishedRecord(Finished)
   GenericRecord(TlsRecordType, Bytes)
 } derive(@debug.Debug)
+pub fn TlsRecord::cipher_summary(Self) -> String
+pub fn TlsRecord::dump_tree(Self) -> String
+pub fn TlsRecord::extension_summary(Self) -> Array[String]
+pub fn TlsRecord::to_event(Self, Bool) -> HandshakeEvent
 pub fn TlsRecord::to_json(Self) -> String
 
 pub enum TlsRecordType {

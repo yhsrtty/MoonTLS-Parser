@@ -13,4 +13,4 @@ Checked against the public OSC2026 guidance (updated on 2026-07-13).
 | CI | Ready | GitHub Actions workflow (`.github/workflows/ci.yml`) is configured for Linux, macOS, and Windows. |
 | Source attribution | Ready | `docs/source-attribution.md`. |
 | Mooncakes package | Ready | `moon.mod` metadata is ready and published on mooncakes.io. |
-| Effective source scale | Tracked | 1100+ lines of pure MoonBit codebase, exceeding the minimal competition standard. |
+| Effective source scale | Tracked | 5,700+ lines of MoonBit implementation plus dedicated tests, exceeding the minimal competition standard. |
