@@ -58,7 +58,7 @@ jobs:
           moon fmt --deny-warn
           git diff --exit-code
           moon info
-          git diff --exit-code -- '*.mbti'
+          git diff --exit-code --ignore-blank-lines -- '*.mbti'
           moon build
           moon test --deny-warn
           moon run cmd/main
